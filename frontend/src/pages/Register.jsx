@@ -1,22 +1,62 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Briefcase, ArrowRight, Globe, GitBranch, Building } from 'lucide-react';
+import Swal from 'sweetalert2';
 import './Auth.css';
 
 const Register = () => {
   const [accountType, setAccountType] = useState('candidate');
+  const router = useNavigate();
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: '',
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    try {
+      const response = await fetch('http://localhost:5000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password, accountType }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || 'Registration failed');
+        return;
+      }
+      Swal.fire({
+        title: 'Account Created',
+        text: 'Welcome to WorkConnect! Redirecting...',
+        icon: 'success',
+        timer: 3000,
+        showConfirmButton: false,
+        timerProgressBar: true,
+        background: '#0a0a0a',
+        color: '#ffffff',
+        iconColor: '#22d3ee'
+      }).then(() => {
+        router('/');
+      });
+    } catch (error) {
+      setError('An error occurred during registration. Please try again.');
+    }
     console.log('Register attempt', { accountType, ...formData });
   };
 
@@ -118,6 +158,25 @@ const Register = () => {
               <p className="input-hint">Must be at least 8 characters long</p>
             </div>
 
+            <div className="form-group">
+              <label className="form-label">Confirm Password</label>
+              <div className="input-wrapper">
+                <div className="input-icon">
+                  <Lock size={18} />
+                </div>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="auth-input"
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
+              <p className="input-hint">Same as password</p>
+            </div>
+
             <div className="checkbox-group">
               <div className="checkbox-wrapper">
                 <input
@@ -128,9 +187,15 @@ const Register = () => {
                 />
               </div>
               <label htmlFor="terms" className="checkbox-label">
-                I agree to the <a href="#" className="auth-link">Terms of Service</a> and <a href="#" className="auth-link">Privacy Policy</a>
+                I agree to the <a href="/terms" className="auth-link">Terms of Service</a> and <a href="/privacy" className="auth-link">Privacy Policy</a>
               </label>
             </div>
+
+            {error && (
+              <div className="bg-red-500/10 text-red-400 text-xs px-4 py-3 border border-red-500/20 backdrop-blur-sm">
+                {error}
+              </div>
+            )}
 
             <button type="submit" className="btn btn-primary submit-btn">
               Create Account <ArrowRight size={18} />

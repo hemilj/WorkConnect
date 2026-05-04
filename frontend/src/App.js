@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import TermCondition from './pages/Term&Condition';
 
 const MainLayout = () => {
   return (
@@ -24,6 +25,8 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/terms" element={<TermCondition />} />
+            <Route path="/privacy" element={<TermCondition />} />
           </Route>
           <Route path="/login" element={<main className="flex-grow"><Login /></main>} />
           <Route path="/register" element={<main className="flex-grow"><Register /></main>} />
