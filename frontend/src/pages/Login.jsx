@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Briefcase, ArrowRight, GitBranch, Globe } from 'lucide-react';
+import Swal from 'sweetalert2';
 import './Auth.css';
 
 const Login = () => {
+  const [error, setError] = useState('');
+  const router = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -13,9 +16,36 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Prevent default form submission to show UI only
+    try {
+      const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || 'Login failed');
+        return;
+      }
+      Swal.fire({
+        title: 'Login Successful',
+        text: 'Welcome to WorkConnect! Redirecting...',
+        icon: 'success',
+        timer: 3000,
+        showConfirmButton: false,
+        timerProgressBar: true,
+        background: '#0a0a0a',
+        color: '#ffffff',
+        iconColor: '#22d3ee'
+      }).then(() => {
+        router('/');
+      });
+    } catch (error) {
+      setError('An error occurred during login. Please try again.');
+    }
     console.log('Login attempt', formData);
   };
 
@@ -76,6 +106,10 @@ const Login = () => {
                 />
               </div>
             </div>
+
+            {
+              error && <div className="error-message">{error}</div>
+            }
 
             <button type="submit" className="btn btn-primary submit-btn">
               Sign In <ArrowRight size={18} />
