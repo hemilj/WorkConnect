@@ -1,20 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Briefcase, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Briefcase, Menu, X, User, LogOut } from 'lucide-react';
 import './Header.css';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
+
+    // Get user from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/login');
+    window.location.reload();
+  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -33,16 +50,37 @@ const Header = () => {
         {/* Desktop Navigation */}
         <nav className="desktop-nav">
           <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>Home</Link>
-          <a href="#jobs" className="nav-link">Jobs</a>
+          {user && user.accountType === 'employer' && (
+            <Link to="/post-job" className={`nav-link ${isActive('/post-job') ? 'active' : ''}`}>Post a Job</Link>
+          )}
+          <Link to="/jobs" className={`nav-link ${isActive('/jobs') ? 'active' : ''}`}>Jobs</Link>
           <a href="#companies" className="nav-link">Companies</a>
           <a href="#about" className="nav-link">About</a>
         </nav>
 
         <div className="desktop-auth">
-          <Link to="/login" className="auth-login">Log in</Link>
-          <Link to="/register" className="btn btn-primary">
-            Sign up
-          </Link>
+          {user ? (
+            <div className="user-profile-wrapper">
+              <div className="user-profile">
+                <div className="user-avatar">
+                  {user.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+                </div>
+                <div className="user-info">
+                  <span className="user-name">{user.name}</span>
+                </div>
+                <button onClick={handleLogout} className="logout-icon-btn" title="Logout">
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="auth-login">Log in</Link>
+              <Link to="/register" className="btn btn-primary">
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -58,13 +96,33 @@ const Header = () => {
       {isMobileMenuOpen && (
         <div className="mobile-nav glass-panel animate-fade-in-up">
           <Link to="/" className={`mobile-nav-link ${isActive('/') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-          <a href="#jobs" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Jobs</a>
+          {user && user.accountType === 'employer' && (
+            <Link to="/post-job" className={`mobile-nav-link ${isActive('/post-job') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Post a Job</Link>
+          )}
+          <Link to="/jobs" className={`mobile-nav-link ${isActive('/jobs') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Jobs</Link>
           <a href="#companies" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Companies</a>
           <hr className="mobile-nav-divider" />
-          <div className="mobile-auth-container">
-            <Link to="/login" className="btn btn-outline btn-full" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link>
-            <Link to="/register" className="btn btn-primary btn-full" onClick={() => setIsMobileMenuOpen(false)}>Sign up</Link>
-          </div>
+          
+          {user ? (
+            <div className="mobile-user-section">
+              <div className="user-profile">
+                <div className="user-avatar">
+                  {user.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+                </div>
+                <div className="user-info">
+                  <span className="user-name">{user.name}</span>
+                </div>
+              </div>
+              <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="btn btn-outline btn-full logout-btn-mobile">
+                <LogOut size={18} /> Logout
+              </button>
+            </div>
+          ) : (
+            <div className="mobile-auth-container">
+              <Link to="/login" className="btn btn-outline btn-full" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link>
+              <Link to="/register" className="btn btn-primary btn-full" onClick={() => setIsMobileMenuOpen(false)}>Sign up</Link>
+            </div>
+          )}
         </div>
       )}
     </header>

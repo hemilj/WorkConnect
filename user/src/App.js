@@ -4,6 +4,9 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import PostJob from './pages/PostJob';
+import Jobs from './pages/Jobs';
+import JobDetails from './pages/JobDetails';
 import TermCondition from './pages/Term&Condition';
 
 const MainLayout = () => {
@@ -25,6 +28,9 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/job/:id" element={<JobDetails />} />
+            <Route path="/post-job" element={<PostJob />} />
             <Route path="/terms" element={<TermCondition />} />
             <Route path="/privacy" element={<TermCondition />} />
           </Route>

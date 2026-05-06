@@ -30,6 +30,8 @@ const Login = () => {
         setError(data.message || 'Login failed');
         return;
       }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       Swal.fire({
         title: 'Login Successful',
         text: 'Welcome to WorkConnect! Redirecting...',
@@ -42,11 +44,102 @@ const Login = () => {
         iconColor: '#22d3ee'
       }).then(() => {
         router('/');
+        window.location.reload(); // Force reload to update header
       });
     } catch (error) {
       setError('An error occurred during login. Please try again.');
     }
     console.log('Login attempt', formData);
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    const { value: email } = await Swal.fire({
+      title: 'Forgot Password',
+      input: 'email',
+      inputLabel: 'Enter your email address',
+      inputPlaceholder: 'name@example.com',
+      showCancelButton: true,
+      background: '#0a0a0a',
+      color: '#ffffff',
+      confirmButtonColor: '#22d3ee',
+      cancelButtonColor: '#1f2937',
+    });
+
+    if (email) {
+      // Check if email exists
+      try {
+        const response = await fetch('http://localhost:5000/api/forgot-password/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: data.message || 'User not found!',
+            background: '#0a0a0a',
+            color: '#ffffff',
+          });
+          return;
+        }
+
+        // If exists, ask for new password
+        const { value: newPassword } = await Swal.fire({
+          title: 'Update Password',
+          input: 'password',
+          inputLabel: 'Enter your new password',
+          inputPlaceholder: '••••••••',
+          showCancelButton: true,
+          background: '#0a0a0a',
+          color: '#ffffff',
+          confirmButtonColor: '#22d3ee',
+          cancelButtonColor: '#1f2937',
+          inputAttributes: {
+            minlength: 6,
+            autocapitalize: 'off',
+            autocorrect: 'off'
+          }
+        });
+
+        if (newPassword) {
+          const updateResponse = await fetch('http://localhost:5000/api/forgot-password/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, newPassword }),
+          });
+          const updateData = await updateResponse.json();
+          if (updateResponse.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: 'Your password has been updated.',
+              background: '#0a0a0a',
+              color: '#ffffff',
+              confirmButtonColor: '#22d3ee',
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: updateData.message || 'Failed to update password.',
+              background: '#0a0a0a',
+              color: '#ffffff',
+            });
+          }
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred. Please try again later.',
+          background: '#0a0a0a',
+          color: '#ffffff',
+        });
+      }
+    }
   };
 
   return (
@@ -89,7 +182,7 @@ const Login = () => {
             <div className="form-group">
               <div className="form-label-row">
                 <label className="form-label mb-0">Password</label>
-                <a href="#" className="forgot-password">Forgot password?</a>
+                <a href="#" className="forgot-password" onClick={handleForgotPassword}>Forgot password?</a>
               </div>
               <div className="input-wrapper">
                 <div className="input-icon">

@@ -41,6 +41,8 @@ const Register = () => {
         setError(data.message || 'Registration failed');
         return;
       }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       Swal.fire({
         title: 'Account Created',
         text: 'Welcome to WorkConnect! Redirecting...',
@@ -53,6 +55,7 @@ const Register = () => {
         iconColor: '#22d3ee'
       }).then(() => {
         router('/');
+        window.location.reload(); // Force reload to update header
       });
     } catch (error) {
       setError('An error occurred during registration. Please try again.');

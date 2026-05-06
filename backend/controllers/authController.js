@@ -5,7 +5,7 @@ const generateToken = (user) => {
     return jwt.sign(
         {
             id: user._id,
-            role: user.role
+            accountType: user.accountType
         },
         process.env.JWT_SECRET,
         {
@@ -34,8 +34,9 @@ const register = async (req, res) => {
             token,
             user: {
                 id: newUser._id,
+                name: newUser.name,
                 email: newUser.email,
-                role: newUser.role
+                accountType: newUser.accountType
             }
         });
     } catch (error) {
@@ -67,8 +68,9 @@ const login = async (req, res) => {
             token,
             user: {
                 id: user._id,
+                name: user.name,
                 email: user.email,
-                role: user.role
+                accountType: user.accountType
             }
         });
 
@@ -78,4 +80,43 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const resetPassword = async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User with this email does not exist' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ message: 'Password updated successfully' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Server error during password reset' });
+    }
+};
+
+const checkEmail = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User with this email does not exist' });
+        }
+
+        res.status(200).json({ message: 'Email exists' });
+
+    } catch (error) {
+        console.error('Check email error:', error);
+        res.status(500).json({ message: 'Server error during email check' });
+    }
+};
+
+module.exports = { register, login, resetPassword, checkEmail };
